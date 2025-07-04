@@ -65,7 +65,6 @@ func getDrawValue(draw []byte) map[string]int {
 
 func (d *day02) SolvePartOne(input []byte) string {
 	parsed := parseInput(input)
-	// fmt.Printf("%+v\n", parsed)
 
 	all := triplet{
 		red:   12,
@@ -88,6 +87,26 @@ outer:
 }
 
 func (d *day02) SolvePartTwo(input []byte) string {
-	// Placeholder for part two logic
-	return "Part Two solution for Day 02"
+	parsed := parseInput(input)
+
+	answer := 0
+
+	for _, game := range parsed {
+		min := triplet{}
+		for _, draw := range game {
+			min.red = maxInt(min.red, draw.red)
+			min.green = maxInt(min.green, draw.green)
+			min.blue = maxInt(min.blue, draw.blue)
+		}
+		answer += min.red * min.green * min.blue
+	}
+
+	return fmt.Sprintf("%v", answer)
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
