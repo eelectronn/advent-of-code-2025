@@ -6,4 +6,4 @@ set +a
 DAY=$1
 
 curl "https://adventofcode.com/2023/day/$DAY/input" \
-  -b "session=$AOC_SESSION" > inputs/$(printf "%02d" $DAY).txt
+  -b "session=$AOC_SESSION" > input/$(printf "%02d" $DAY).txt
