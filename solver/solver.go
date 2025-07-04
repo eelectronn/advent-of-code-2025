@@ -6,20 +6,21 @@ import (
 )
 
 type Solver interface {
-	SolvePartOne(input string) string
-	SolvePartTwo(input string) string
+	SolvePartOne(input []byte) string
+	SolvePartTwo(input []byte) string
 }
 
 var solvers = map[int]Solver{
 	1: &day01{},
+	2: &day02{},
 }
 
-func readFile(filePath string) (string, error) {
+func readFile(filePath string) ([]byte, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(data), nil
+	return data, nil
 }
 
 func Solve(day, part int, sample bool) string {
@@ -29,7 +30,7 @@ func Solve(day, part int, sample bool) string {
 	}
 	filePath := fmt.Sprintf("input/%02d.txt", day)
 	if sample {
-		filePath = fmt.Sprintf("input/%02d_sample.txt", day)
+		filePath = fmt.Sprintf("input/sample/%02d.txt", day)
 	}
 	input, err := readFile(filePath)
 	if err != nil {

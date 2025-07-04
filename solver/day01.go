@@ -4,22 +4,20 @@ import (
 	"bytes"
 	"fmt"
 	"slices"
-	"strings"
 )
 
 type day01 struct{}
 
-func (d *day01) SolvePartOne(input string) string {
-	lines := strings.Split(input, "\n")
+func (d *day01) SolvePartOne(input []byte) string {
+	lines := bytes.Split(input, []byte("\n"))
 	answer := 0
 	for _, line := range lines {
-		if line == "" {
+		if len(line) == 0 {
 			continue
 		}
-		lineBytes := []byte(line)
-		firstDigit := findFirstDigit(lineBytes)
-		slices.Reverse(lineBytes)
-		lastDigit := findFirstDigit(lineBytes)
+		firstDigit := findFirstDigit(line)
+		slices.Reverse(line)
+		lastDigit := findFirstDigit(line)
 		if firstDigit == -1 || lastDigit == -1 {
 			continue
 		}
@@ -29,8 +27,7 @@ func (d *day01) SolvePartOne(input string) string {
 	return fmt.Sprintf("%d", answer)
 }
 
-func (d *day01) SolvePartTwo(input string) string {
-	inputBytes := []byte(input)
+func (d *day01) SolvePartTwo(input []byte) string {
 	replaceMap := map[string]string{
 		"one":   "1",
 		"two":   "2",
@@ -54,15 +51,14 @@ func (d *day01) SolvePartTwo(input string) string {
 		"enin":  "9",
 	}
 	answer := 0
-	lines := bytes.Split(inputBytes, []byte("\n"))
+	lines := bytes.Split(input, []byte("\n"))
 	for _, line := range lines {
 		if len(line) == 0 {
 			continue
 		}
-		lineBytes := []byte(line)
-		firstDigit := findFirstDigitWithWords(lineBytes, replaceMap)
-		slices.Reverse(lineBytes)
-		lastDigit := findFirstDigitWithWords(lineBytes, reversedReplaceMap)
+		firstDigit := findFirstDigitWithWords(line, replaceMap)
+		slices.Reverse(line)
+		lastDigit := findFirstDigitWithWords(line, reversedReplaceMap)
 		if firstDigit == -1 || lastDigit == -1 {
 			continue
 		}
