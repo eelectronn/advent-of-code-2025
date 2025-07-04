@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	fmt.Println(solver.Solve(1, 1, false))
+	fmt.Println(solver.Solve(1, 2, false))
 }
