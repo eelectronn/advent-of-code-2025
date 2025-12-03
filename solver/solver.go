@@ -10,7 +10,9 @@ type Solver interface {
 	SolvePartTwo(input []byte) string
 }
 
-var solvers = map[int]Solver{}
+var solvers = map[int]Solver{
+	1: &day01{},
+}
 
 func readFile(filePath string) ([]byte, error) {
 	data, err := os.ReadFile(filePath)
