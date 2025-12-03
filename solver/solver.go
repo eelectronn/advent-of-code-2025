@@ -13,6 +13,7 @@ type Solver interface {
 var solvers = map[int]Solver{
 	1: &day01{},
 	2: &day02{},
+	3: &day03{},
 }
 
 func readFile(filePath string) ([]byte, error) {
