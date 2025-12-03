@@ -3,6 +3,9 @@
 	"build": {
 		"dockerfile": "Dockerfile"
 	},
+	"mounts": [
+		// "source=${localEnv:HOME}/.ssh,target=/root/.ssh"
+	],
 	"remoteUser": "root",
 	"customizations": {
 		"vscode": {
@@ -17,6 +20,7 @@
 				"editor.formatOnSave": true,
 				"editor.semanticHighlighting.enabled": false,
 				"terminal.integrated.defaultProfile.linux": "zsh",
+				"remote.containers.mountSsh": true,
 				"terminal.integrated.profiles.linux": {
 					"zsh": {
 						"path": "/usr/bin/zsh"
@@ -26,6 +30,11 @@
 		}
 	},
 	"runArgs": [
-		"--init"
-	]
+		"--init",
+		"-v",
+		"${localEnv:SSH_AUTH_SOCK}:/ssh-agent"
+	],
+	"containerEnv": {
+		"SSH_AUTH_SOCK": "/ssh-agent"
+	}
 }
