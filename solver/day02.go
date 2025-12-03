@@ -93,5 +93,36 @@ func (d *day02) SolvePartOne(input []byte) string {
 }
 
 func (d *day02) SolvePartTwo(input []byte) string {
-	return string(input)
+	ranges := d.parseInput(input)
+	fmt.Println(ranges)
+
+	answer := 0
+
+	for _, r := range ranges {
+		low := r[0]
+		high := r[1]
+		lowInt, _ := strconv.Atoi(low)
+		highInt, _ := strconv.Atoi(high)
+		for i := lowInt; i <= highInt; i++ {
+			numStr := fmt.Sprintf("%v", i)
+
+			usedNumbers := make(map[string]struct{})
+			for l := 1; l < len(numStr); l += 1 {
+				if len(numStr)%l != 0 {
+					continue
+				}
+				pattern := numStr[:l]
+				repeated := strings.Repeat(pattern, len(numStr)/l)
+				if repeated == numStr {
+					if _, exists := usedNumbers[repeated]; !exists {
+						usedNumbers[repeated] = struct{}{}
+						fmt.Println("Found repeating pattern:", numStr, "->", pattern)
+						answer += i
+					}
+				}
+			}
+		}
+	}
+
+	return fmt.Sprintf("%v", answer)
 }
