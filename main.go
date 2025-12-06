@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	day := 5
+	day := 6
 
 	sample := false
 	// sample := true
