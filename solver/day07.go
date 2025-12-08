@@ -34,62 +34,50 @@ func (d *day07) findStart(grid [][]rune) index {
 	return index{-1, -1}
 }
 
-func (d *day07) printGrid(grid [][]rune) {
-	for _, line := range grid {
-		fmt.Println(string(line))
-	}
-	fmt.Println("--------------------------------------------------------------------------")
-}
-
 func (d *day07) solve(input []byte) (int, int) {
 	grid := d.parseInput(input)
 	iMax := len(grid)
 	jMax := len(grid[0])
-	start := d.findStart(grid)
+	curr := d.findStart(grid)
 
-	queue := NewQueue[index]()
-	seen := make(map[index]struct{})
-	queue.Enqueue(start)
+	numberOfPaths := make([][]int, len(grid))
+	for i := range numberOfPaths {
+		numberOfPaths[i] = make([]int, len(grid[0]))
+	}
+	numberOfPaths[curr.i][curr.j] = 1
+	grid[curr.i][curr.j] = '|'
 
-	answer := 0
-
-	for queue.Len() > 0 {
-		curr, ok := queue.Dequeue()
-		if !ok {
-			break
-		}
-		if _, exist := seen[curr]; exist {
-			continue
-		}
-		seen[curr] = struct{}{}
-
-		next := index{curr.i + 1, curr.j}
-		if !(0 <= next.i && next.i < iMax && 0 <= next.j && next.j < jMax) {
-			continue
-		}
-
-		switch grid[next.i][next.j] {
-		case '.':
-			{
-				queue.Enqueue(next)
-				grid[next.i][next.j] = '|'
+	answerPartOne := 0
+	for i := curr.i; i < iMax-1; i++ {
+		nextI := i + 1
+		for j := 0; j < jMax; j++ {
+			paths := numberOfPaths[i][j]
+			if grid[i][j] != '|' {
+				continue
 			}
-		case '^':
-			{
-				answer += 1
+			switch grid[nextI][j] {
+			case '^':
+				answerPartOne += 1
 				for _, splitOffset := range []int{-1, 1} {
-					split := index{next.i, next.j + splitOffset}
+					split := index{nextI, j + splitOffset}
 					if 0 <= split.j && split.j < jMax {
-						queue.Enqueue(split)
+						numberOfPaths[split.i][split.j] += paths
 						grid[split.i][split.j] = '|'
 					}
 				}
+			default:
+				grid[nextI][j] = '|'
+				numberOfPaths[nextI][j] += paths
 			}
 		}
-		// d.printGrid(grid)
 	}
 
-	return answer, 0
+	answerPartTwo := 0
+	for _, n := range numberOfPaths[len(numberOfPaths)-1] {
+		answerPartTwo += n
+	}
+
+	return answerPartOne, answerPartTwo
 }
 
 func (d *day07) SolvePartOne(input []byte) string {
