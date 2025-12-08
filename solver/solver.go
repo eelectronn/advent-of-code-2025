@@ -17,6 +17,7 @@ var solvers = map[int]Solver{
 	4: &day04{},
 	5: &day05{},
 	6: &day06{},
+	7: &day07{},
 }
 
 func readFile(filePath string) ([]byte, error) {

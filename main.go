@@ -6,12 +6,12 @@ import (
 )
 
 func main() {
-	day := 6
+	day := 7
 
 	sample := false
 	// sample := true
-	// part := 1
-	part := 2
+	part := 1
+	// part := 2
 
 	fmt.Println(solver.Solve(day, part, sample))
 }
