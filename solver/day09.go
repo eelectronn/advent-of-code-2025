@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -16,6 +17,10 @@ type point struct {
 
 type dir struct {
 	i, j int
+}
+
+type interval struct {
+	l, h int
 }
 
 type directedLineSegment struct {
@@ -150,8 +155,8 @@ func (d *day09) SolvePartTwo(input []byte) string {
 
 	lsLoop := append(append([]directedLineSegment{}, lineSegments...), lineSegments[0])
 
+	// Turn counter
 	rightTurns := 0
-
 	for p := 1; p < len(lsLoop); p++ {
 		prev := lsLoop[p-1]
 		curr := lsLoop[p]
@@ -168,105 +173,46 @@ func (d *day09) SolvePartTwo(input []byte) string {
 	}
 	fmt.Println(rightTurns)
 
-	for x := range points {
-	next_rect:
-		for y := x + 1; y < len(points); y++ {
-			p1 := points[x]
-			p2 := points[y]
-			if (p1 == point{i: 1, j: 1} && p2 == point{i: 8, j: 3}) {
-				fmt.Print()
-			}
-			topLeft := point{i: min(p1.i, p2.i), j: min(p1.j, p2.j)}
-			topRight := point{i: min(p1.i, p2.i), j: max(p1.j, p2.j)}
-			bottomLeft := point{i: max(p1.i, p2.i), j: min(p1.j, p2.j)}
-			bottomRight := point{i: max(p1.i, p2.i), j: max(p1.j, p2.j)}
+	verticalLines := make(map[int][]directedLineSegment)
+	horizaontalLines := make(map[int][]directedLineSegment)
 
-			top := directedLineSegment{from: topLeft, to: topRight}
-			right := directedLineSegment{from: topRight, to: bottomRight}
-			bottom := directedLineSegment{from: bottomRight, to: bottomLeft}
-			left := directedLineSegment{from: bottomLeft, to: topLeft}
-
-			for _, ls := range lineSegments {
-				l := ls
-				if rightTurns < 0 {
-					l = directedLineSegment{from: ls.to, to: ls.from}
+	for _, l := range lineSegments {
+		switch l.direction() {
+		case dir{1, 0}, dir{-1, 0}:
+			{
+				if _, exist := verticalLines[l.from.j]; !exist {
+					verticalLines[l.from.j] = make([]directedLineSegment, 0)
 				}
-
-				lDir := l.direction()
-				switch lDir {
-				case dir{i: 1, j: 0}:
-					{
-						s := right
-						lLow := l.from.i
-						lHigh := l.to.i
-						sLow := s.from.i
-						sHigh := s.to.i
-
-						lBound := l.from.j
-						sBound := s.from.j
-
-						if max(lLow, sLow) <= min(lHigh, sHigh) {
-							if lBound < sBound {
-								continue next_rect
-							}
-						}
-					}
-				case dir{i: -1, j: 0}:
-					{
-						s := left
-						lLow := l.from.i
-						lHigh := l.to.i
-						sLow := s.from.i
-						sHigh := s.to.i
-
-						lBound := l.from.j
-						sBound := s.from.j
-
-						if max(lLow, sLow) <= min(lHigh, sHigh) {
-							if lBound > sBound {
-								continue next_rect
-							}
-						}
-					}
-				case dir{i: 0, j: 1}:
-					{
-						s := top
-						lLow := l.from.j
-						lHigh := l.to.j
-						sLow := s.from.j
-						sHigh := s.to.j
-
-						lBound := l.from.i
-						sBound := s.from.i
-
-						if max(lLow, sLow) <= min(lHigh, sHigh) {
-							if lBound > sBound {
-								continue next_rect
-							}
-						}
-					}
-				case dir{i: 0, j: -1}:
-					{
-						s := bottom
-						lLow := l.from.j
-						lHigh := l.to.j
-						sLow := s.from.j
-						sHigh := s.to.j
-
-						lBound := l.from.i
-						sBound := s.from.i
-
-						if max(lLow, sLow) <= min(lHigh, sHigh) {
-							if lBound < sBound {
-								continue next_rect
-							}
-						}
-					}
-				}
+				verticalLines[l.from.j] = append(verticalLines[l.from.j], l)
 			}
-			fmt.Println(p1, p2)
+		case dir{0, 1}, dir{0, -1}:
+			{
+				if _, exist := horizaontalLines[l.from.i]; !exist {
+					horizaontalLines[l.from.i] = make([]directedLineSegment, 0)
+				}
+				horizaontalLines[l.from.i] = append(horizaontalLines[l.from.i], l)
+			}
 		}
 	}
 
+	verticalPoints := mapKeys(verticalLines)
+	horizontalPoints := mapKeys(horizaontalLines)
+
+	slices.Sort(verticalPoints)
+	slices.Sort(horizontalPoints)
+
+	
+
+	fmt.Printf("%v\n", verticalLines)
+	fmt.Printf("%v\n", horizaontalLines)
+
 	return "answer"
+}
+
+func mapKeys[T comparable, U any](m map[T]U) []T {
+	l := make([]T, 0, len(m))
+	for k := range m {
+		l = append(l, k)
+	}
+	return l
 }
