@@ -6,6 +6,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type day09 struct{}
@@ -112,8 +113,6 @@ func (d *day09) printGrid(boundryPoints map[point]struct{}, iMax, jMax int) {
 
 func (d *day09) SolvePartTwo(input []byte) string {
 	points, iMax, jMax := d.parseInput(input)
-	fmt.Println(iMax)
-	fmt.Println(jMax)
 	pointsLoop := append(points, points[0])
 
 	boundryPoints := make(map[point]struct{})
@@ -158,25 +157,25 @@ func (d *day09) SolvePartTwo(input []byte) string {
 		lineSegments = append(lineSegments, directedLineSegment{from: from, to: to})
 	}
 
-	lsLoop := append(append([]directedLineSegment{}, lineSegments...), lineSegments[0])
+	// lsLoop := append(append([]directedLineSegment{}, lineSegments...), lineSegments[0])
 
 	// Turn counter
-	rightTurns := 0
-	for p := 1; p < len(lsLoop); p++ {
-		prev := lsLoop[p-1]
-		curr := lsLoop[p]
+	// rightTurns := 0
+	// for p := 1; p < len(lsLoop); p++ {
+	// 	prev := lsLoop[p-1]
+	// 	curr := lsLoop[p]
 
-		prevDir := prev.direction()
-		currDir := curr.direction()
+	// 	prevDir := prev.direction()
+	// 	currDir := curr.direction()
 
-		crossProduct := prevDir.i*currDir.j - prevDir.j*currDir.i
-		if crossProduct < 0 {
-			rightTurns += 1
-		} else {
-			rightTurns -= 1
-		}
-	}
-	fmt.Println(rightTurns)
+	// 	crossProduct := prevDir.i*currDir.j - prevDir.j*currDir.i
+	// 	if crossProduct < 0 {
+	// 		rightTurns += 1
+	// 	} else {
+	// 		rightTurns -= 1
+	// 	}
+	// }
+	// fmt.Println(rightTurns)
 
 	directionsOnPoints := make(map[point]map[dir]struct{})
 	for _, l := range lineSegments {
@@ -218,106 +217,126 @@ func (d *day09) SolvePartTwo(input []byte) string {
 		}
 	}
 
-	fmt.Println("here")
+	wg := sync.WaitGroup{}
+	iMu := sync.Mutex{}
 	iIncludedPoints := make(map[int]map[int]struct{})
 	for i := range iWithCorners {
-		inside := false
-		included := make(map[int]struct{}, 0)
-		for j := 0; j < jMax; j++ {
-			if _, exist := boundryPoints[point{i, j}]; exist || inside {
-				included[j] = struct{}{}
-			}
-			if pointDirs, exist := directionsOnPoints[point{i, j}]; exist {
-				_, upExist := pointDirs[dir{-1, 0}]
-				_, downExist := pointDirs[dir{1, 0}]
-				if upExist {
-					inside = true
-				} else if downExist {
-					inside = false
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			inside := false
+			included := make(map[int]struct{})
+			for j := 0; j < jMax; j++ {
+				if _, exist := boundryPoints[point{i, j}]; exist || inside {
+					included[j] = struct{}{}
+				}
+				if pointDirs, exist := directionsOnPoints[point{i, j}]; exist {
+					_, upExist := pointDirs[dir{-1, 0}]
+					_, downExist := pointDirs[dir{1, 0}]
+					if upExist {
+						inside = true
+					} else if downExist {
+						inside = false
+					}
 				}
 			}
-		}
-		iIncludedPoints[i] = included
+			iMu.Lock()
+			defer iMu.Unlock()
+			iIncludedPoints[i] = included
+		}()
 	}
 
-	// fmt.Println(iInludedPoints)
-
-	fmt.Println("here")
+	jMu := sync.Mutex{}
 	jIncludedPoints := make(map[int]map[int]struct{})
 	for j := range jWithCorners {
-		inside := false
-		included := make(map[int]struct{}, 0)
-		for i := 0; i < iMax; i++ {
-			if _, exist := boundryPoints[point{i, j}]; exist || inside {
-				included[i] = struct{}{}
-			}
-			if pointDirs, exist := directionsOnPoints[point{i, j}]; exist {
-				_, rightExist := pointDirs[dir{0, 1}]
-				_, leftExist := pointDirs[dir{0, -1}]
-				if rightExist {
-					inside = true
-				} else if leftExist {
-					inside = false
+		j := j
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			inside := false
+			included := make(map[int]struct{})
+			for i := 0; i < iMax; i++ {
+				if _, exist := boundryPoints[point{i, j}]; exist || inside {
+					included[i] = struct{}{}
+				}
+				if pointDirs, exist := directionsOnPoints[point{i, j}]; exist {
+					_, rightExist := pointDirs[dir{0, 1}]
+					_, leftExist := pointDirs[dir{0, -1}]
+					if rightExist {
+						inside = true
+					} else if leftExist {
+						inside = false
+					}
 				}
 			}
-		}
-		jIncludedPoints[j] = included
+			jMu.Lock()
+			defer jMu.Unlock()
+			jIncludedPoints[j] = included
+		}()
 	}
 
+	wg.Wait()
+
 	largestArea := -1
+
+	mu := sync.Mutex{}
 	for x := range points {
-	nextRect:
 		for y := x + 1; y < len(points); y++ {
 			p1 := points[x]
 			p2 := points[y]
-			topLeft := point{i: min(p1.i, p2.i), j: min(p1.j, p2.j)}
-			topRight := point{i: min(p1.i, p2.i), j: max(p1.j, p2.j)}
-			bottomLeft := point{i: max(p1.i, p2.i), j: min(p1.j, p2.j)}
-			bottomRight := point{i: max(p1.i, p2.i), j: max(p1.j, p2.j)}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				topLeft := point{i: min(p1.i, p2.i), j: min(p1.j, p2.j)}
+				topRight := point{i: min(p1.i, p2.i), j: max(p1.j, p2.j)}
+				bottomLeft := point{i: max(p1.i, p2.i), j: min(p1.j, p2.j)}
+				bottomRight := point{i: max(p1.i, p2.i), j: max(p1.j, p2.j)}
 
-			top := directedLineSegment{from: topLeft, to: topRight}
-			right := directedLineSegment{from: topRight, to: bottomRight}
-			bottom := directedLineSegment{from: bottomLeft, to: bottomRight}
-			left := directedLineSegment{from: topLeft, to: bottomLeft}
+				top := directedLineSegment{from: topLeft, to: topRight}
+				right := directedLineSegment{from: topRight, to: bottomRight}
+				bottom := directedLineSegment{from: bottomLeft, to: bottomRight}
+				left := directedLineSegment{from: topLeft, to: bottomLeft}
 
-			validPts := iIncludedPoints[top.from.i]
-			for k := top.from.j; k <= top.to.j; k++ {
-				if _, exist := validPts[k]; !exist {
-					continue nextRect
+				validPts := iIncludedPoints[top.from.i]
+				for k := top.from.j; k <= top.to.j; k++ {
+					if _, exist := validPts[k]; !exist {
+						return
+					}
 				}
-			}
 
-			validPts = iIncludedPoints[bottom.from.i]
-			for k := bottom.from.j; k <= bottom.to.j; k++ {
-				if _, exist := validPts[k]; !exist {
-					continue nextRect
+				validPts = iIncludedPoints[bottom.from.i]
+				for k := bottom.from.j; k <= bottom.to.j; k++ {
+					if _, exist := validPts[k]; !exist {
+						return
+					}
 				}
-			}
 
-			validPts = jIncludedPoints[right.from.j]
-			for k := right.from.i; k <= right.to.i; k++ {
-				if _, exist := validPts[k]; !exist {
-					continue nextRect
+				validPts = jIncludedPoints[right.from.j]
+				for k := right.from.i; k <= right.to.i; k++ {
+					if _, exist := validPts[k]; !exist {
+						return
+					}
 				}
-			}
 
-			validPts = jIncludedPoints[left.from.j]
-			for k := left.from.i; k <= left.to.i; k++ {
-				if _, exist := validPts[k]; !exist {
-					continue nextRect
+				validPts = jIncludedPoints[left.from.j]
+				for k := left.from.i; k <= left.to.i; k++ {
+					if _, exist := validPts[k]; !exist {
+						return
+					}
 				}
-			}
-			iDiff := int(math.Abs(float64(p1.i-p2.i))) + 1
-			jDiff := int(math.Abs(float64(p1.j-p2.j))) + 1
-			if iDiff*jDiff > largestArea {
-				largestArea = iDiff * jDiff
-			}
+				iDiff := int(math.Abs(float64(p1.i-p2.i))) + 1
+				jDiff := int(math.Abs(float64(p1.j-p2.j))) + 1
+				mu.Lock()
+				defer mu.Unlock()
+				if iDiff*jDiff > largestArea {
+					largestArea = iDiff * jDiff
+				}
+			}()
+
 		}
 	}
+	wg.Wait()
 
-	fmt.Println(largestArea)
-
-	// fmt.Println(jIncludedPoints)
-
-	return "answer"
+	return fmt.Sprintf("%v", largestArea)
 }
