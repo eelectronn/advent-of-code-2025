@@ -11,15 +11,16 @@ type Solver interface {
 }
 
 var solvers = map[int]Solver{
-	1: &day01{},
-	2: &day02{},
-	3: &day03{},
-	4: &day04{},
-	5: &day05{},
-	6: &day06{},
-	7: &day07{},
-	8: &day08{},
-	9: &day09{},
+	1:  &day01{},
+	2:  &day02{},
+	3:  &day03{},
+	4:  &day04{},
+	5:  &day05{},
+	6:  &day06{},
+	7:  &day07{},
+	8:  &day08{},
+	9:  &day09{},
+	10: &day10{},
 }
 
 func readFile(filePath string) ([]byte, error) {
