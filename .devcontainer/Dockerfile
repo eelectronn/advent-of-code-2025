@@ -13,3 +13,10 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 ENV GOPATH="/workspaces"
 RUN go install -v github.com/go-delve/delve/cmd/dlv@latest
 RUN go install -v golang.org/x/tools/gopls@latest
+RUN mkdir -p $GOPATH/src/github.com/draffensperger/golp/lpsolve
+RUN curl -L http://sourceforge.net/projects/lpsolve/files/lpsolve/5.5.2.0/lp_solve_5.5.2.0_dev_ux64.tar.gz | tar xvz -C $GOPATH/src/github.com/draffensperger/golp/lpsolve
+RUN echo 'export CGO_CFLAGS="-I/workspaces/src/github.com/draffensperger/golp/lpsolve"' >> /root/.zshrc
+RUN echo 'export CGO_LDFLAGS="-L/workspaces/src/github.com/draffensperger/golp/lpsolve -llpsolve55"' >> /root/.zshrc
+ENV LD_LIBRARY_PATH="/workspaces/src/github.com/draffensperger/golp/lpsolve:${LD_LIBRARY_PATH}"
+
+

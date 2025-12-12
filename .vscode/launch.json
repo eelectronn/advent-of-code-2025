@@ -9,7 +9,11 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}"
+            "program": "${workspaceFolder}",
+            "env": {
+                "CGO_CFLAGS": "-I/workspaces/src/github.com/draffensperger/golp/lpsolve",
+                "CGO_LDFLAGS": "-L/workspaces/src/github.com/draffensperger/golp/lpsolve -llpsolve55"
+            }
         }
     ]
 }

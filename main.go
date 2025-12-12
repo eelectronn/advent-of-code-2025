@@ -8,8 +8,8 @@ import (
 func main() {
 	day := 10
 
-	// sample := false
-	sample := true
+	sample := false
+	// sample := true
 	// part := 1
 	part := 2
 

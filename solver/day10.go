@@ -3,15 +3,13 @@ package solver
 import (
 	"bytes"
 	"fmt"
-	"math"
 	"math/bits"
 	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 
-	"gonum.org/v1/gonum/mat"
-	"gonum.org/v1/gonum/optimize/convex/lp"
+	"github.com/draffensperger/golp"
 )
 
 type day10 struct{}
@@ -130,8 +128,7 @@ func (d *day10) SolvePartOne(input []byte) string {
 
 func (d *day10) SolvePartTwo(input []byte) string {
 	machines := d.parseInput(input)
-	fmt.Println(machines)
-
+	answer := 0.0
 	for _, m := range machines {
 		lightToButtons := make([][]float64, len(m.joltage))
 		for i := 0; i < len(m.buttons); i++ {
@@ -142,24 +139,21 @@ func (d *day10) SolvePartTwo(input []byte) string {
 				lightToButtons[l][i] = 1.0
 			}
 		}
-		s := make([]float64, len(m.buttons))
-		for i := range s {
-			s[i] = 1.0
+		lp := golp.NewLP(0, len(m.buttons))
+		for i := range len(lightToButtons) {
+			lp.AddConstraint(lightToButtons[i], golp.EQ, float64(m.joltage[i]))
 		}
-		b := make([]float64, len(m.joltage))
-		for i := range b {
-			b[i] = float64(m.joltage[i])
+		for i := range len(m.buttons) {
+			lp.SetInt(i, true)
 		}
-
-		linearMat := make([]float64, 0, len(lightToButtons)*len(lightToButtons[0]))
-		for _, row := range lightToButtons {
-			linearMat = append(linearMat, row...)
+		obj := make([]float64, len(m.buttons))
+		for i := range len(m.buttons) {
+			obj[i] = 1
 		}
-
-
-		optF, optX, err := lp.Simplex(s, mat.NewDense(len(lightToButtons), len(lightToButtons[0]), linearMat), b, math.Inf(1), nil)
-		fmt.Println(optF, optX, err)
+		lp.SetObjFn(obj)
+		lp.Solve()
+		answer += lp.Objective()
 	}
 
-	return "not-found"
+	return fmt.Sprintf("%v", answer)
 }
